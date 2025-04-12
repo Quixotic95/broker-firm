@@ -1,13 +1,13 @@
-package com.gituhub.quixotic95.brokerfirmchallange;
+package com.gituhub.quixotic95.brokerfirmchallenge;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BrokerFirmChallangeApplication {
+public class BrokerFirmChallengeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(BrokerFirmChallangeApplication.class, args);
+        SpringApplication.run(BrokerFirmChallengeApplication.class, args);
     }
 
 }

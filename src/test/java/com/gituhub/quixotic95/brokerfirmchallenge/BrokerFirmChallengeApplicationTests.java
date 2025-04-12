@@ -1,10 +1,10 @@
-package com.gituhub.quixotic95.brokerfirmchallange;
+package com.gituhub.quixotic95.brokerfirmchallenge;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class BrokerFirmChallangeApplicationTests {
+class BrokerFirmChallengeApplicationTests {
 
     @Test
     void contextLoads() {
