@@ -1,4 +1,4 @@
-package com.gituhub.quixotic95.brokerfirmchallenge;
+package com.github.quixotic95.brokerfirmchallenge;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
