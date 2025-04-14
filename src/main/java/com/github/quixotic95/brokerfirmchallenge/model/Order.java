@@ -1,7 +1,7 @@
 package com.github.quixotic95.brokerfirmchallenge.model;
 
-import com.github.quixotic95.brokerfirmchallenge.model.order.OrderSide;
-import com.github.quixotic95.brokerfirmchallenge.model.order.OrderStatus;
+import com.github.quixotic95.brokerfirmchallenge.enums.OrderSide;
+import com.github.quixotic95.brokerfirmchallenge.enums.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,28 +14,27 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "ORDERS", indexes = {@Index(name = "idx_order_customer_status", columnList = "customer_id,status"), @Index(name = "idx_order_create_date", columnList = "createDate")})
 @Getter
-@Setter
+@Builder(toBuilder = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "ORDERS", indexes = {@Index(name = "idx_order_customer_status", columnList = "customer_id,status"), @Index(name = "idx_order_create_date", columnList = "createDate")})
 public class Order {
     @Id
-    @EqualsAndHashCode.Include
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
-
-    @Version
-    private Long version;
 
     @Column(nullable = false)
     private Long customerId;
@@ -61,5 +60,8 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime createDate;
+
+    @Version
+    private Long version;
 
 }
