@@ -2,6 +2,8 @@ package com.github.quixotic95.brokerfirmchallenge.model;
 
 import com.github.quixotic95.brokerfirmchallenge.enums.OrderSide;
 import com.github.quixotic95.brokerfirmchallenge.enums.OrderStatus;
+import com.github.quixotic95.brokerfirmchallenge.exception.InvalidException;
+import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -9,59 +11,59 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
-import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
+@Table(name = "orders")
 @Getter
 @Builder(toBuilder = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "ORDERS", indexes = {@Index(name = "idx_order_customer_status", columnList = "customer_id,status"), @Index(name = "idx_order_create_date", columnList = "createDate")})
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "customer_id", nullable = false)
     private Long customerId;
 
-    @Column(nullable = false)
-    private String assetType;
+    @Column(name = "asset_name", nullable = false)
+    private String assetName;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderSide side;
+    @Column(name = "order_side", nullable = false)
+    private OrderSide orderSide;
+
+    @Column(name = "order_size", nullable = false)
+    private Integer size;
 
     @Column(nullable = false)
-    @Positive
-    private BigDecimal size;
-
-    @Column(nullable = false)
-    @Positive
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status;
 
-    @Column(nullable = false)
-    private LocalDateTime createDate;
+    @Column(name = "create_date", nullable = false)
+    private Instant createDate;
 
-    @Version
-    private Long version;
+    public BigDecimal calculateTotalAmount() {
+        return price.multiply(BigDecimal.valueOf(size));
+    }
 
+    public void cancel() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new InvalidException(ErrorCode.ORDER_NOT_CANCELLABLE.getMessage());
+        }
+        this.status = OrderStatus.CANCELED;
+    }
 }
