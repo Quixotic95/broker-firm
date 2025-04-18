@@ -51,10 +51,10 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING;
 
     @Column(name = "create_date", nullable = false)
-    private Instant createDate;
+    private Instant createDate = Instant.now();
 
     public BigDecimal calculateTotalAmount() {
         return price.multiply(BigDecimal.valueOf(size));

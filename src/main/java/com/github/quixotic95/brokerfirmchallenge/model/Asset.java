@@ -6,7 +6,6 @@ import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -16,19 +15,18 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "ASSETS")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@IdClass(AssetId.class)
+@Table(name = "ASSETS")
 public class Asset {
 
     @EmbeddedId
     private AssetId id;
 
-    @Column(name = "asset_size", nullable = false)
+    @Column(name = "asset_size", nullable = false, precision = 19, scale = 4)
     private BigDecimal size;
 
-    @Column(name = "usable_size", nullable = false)
+    @Column(name = "usable_size", nullable = false, precision = 19, scale = 4)
     private BigDecimal usableSize;
 
     @Version

@@ -16,6 +16,6 @@ import java.io.Serializable;
 public class AssetId implements Serializable {
     @Column(name = "customer_id", nullable = false)
     private Long customerId;
-    @Column(name = "asset_name", nullable = false)
+    @Column(name = "asset_name", nullable = false, length = 50)
     private String assetName;
 }
