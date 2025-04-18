@@ -1,49 +1,53 @@
 package com.github.quixotic95.brokerfirmchallenge.model;
 
 
+import com.github.quixotic95.brokerfirmchallenge.exception.InsufficientException;
+import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
 import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
+@Table(name = "ASSETS")
 @Getter
-@Builder(toBuilder = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(
-        name = "ASSETS",
-        indexes = {@Index(name = "idx_asset_customer_asset", columnList = "customer_id,asset_type", unique = true)})
+@IdClass(AssetId.class)
 public class Asset {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
-    private Long id;
 
-    @Column(nullable = false)
-    private Long customerId;
+    @EmbeddedId
+    private AssetId id;
 
-    @Column(nullable = false)
-    private String assetType;
+    @Column(name = "asset_size", nullable = false)
+    private BigDecimal size;
 
-    @Column(nullable = false)
-    private Integer size;
-
-    @Column(nullable = false)
-    private Integer usableSize;
+    @Column(name = "usable_size", nullable = false)
+    private BigDecimal usableSize;
 
     @Version
     private Long version;
 
+    public Asset(AssetId id, BigDecimal size, BigDecimal usableSize) {
+        this.id = id;
+        this.size = size;
+        this.usableSize = usableSize;
+    }
+
+    public void increaseUsableSize(BigDecimal amount) {
+        this.usableSize = this.usableSize.add(amount);
+    }
+
+    public void decreaseUsableSize(BigDecimal amount) {
+        if (this.usableSize.compareTo(amount) < 0) {
+            throw new InsufficientException(ErrorCode.INSUFFICIENT_BALANCE.getMessage());
+        }
+        this.usableSize = this.usableSize.subtract(amount);
+    }
 }
