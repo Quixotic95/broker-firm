@@ -62,7 +62,7 @@ public class Order {
 
     public void cancel() {
         if (this.status != OrderStatus.PENDING) {
-            throw new InvalidException(ErrorCode.ORDER_NOT_CANCELLABLE.getMessage());
+            throw new InvalidException(ErrorCode.ORDER_NOT_CANCELLABLE);
         }
         this.status = OrderStatus.CANCELED;
     }
