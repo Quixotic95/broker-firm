@@ -111,7 +111,8 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findAll();
     }
 
-    private Order getOrderOrThrow(Long orderId) {
+    //public for test purposes
+    public Order getOrderOrThrow(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
     }
