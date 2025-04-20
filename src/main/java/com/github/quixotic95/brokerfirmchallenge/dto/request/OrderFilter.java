@@ -6,6 +6,7 @@ import java.time.Instant;
 
 public record OrderFilter(
         Long customerId,
+        String username,
         OrderStatus status,
         Instant startDate,
         Instant endDate

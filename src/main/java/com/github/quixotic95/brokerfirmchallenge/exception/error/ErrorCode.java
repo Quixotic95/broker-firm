@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     ORDER_NOT_FOUND("ORDER_NOT_FOUND", "Order not found", HttpStatus.NOT_FOUND),
+    ORDER_NOT_MATCHABLE("ORDER_NOT_MATCHABLE", "Only pending orders can be matched", HttpStatus.BAD_REQUEST),
     CUSTOMER_NOT_FOUND("CUSTOMER_NOT_FOUND", "Customer not found", HttpStatus.NOT_FOUND),
     ENTITY_NOT_FOUND("ENTITY_NOT_FOUND", "Entity not found", HttpStatus.NOT_FOUND),
     ASSET_NOT_FOUND("ASSET_NOT_FOUND", "Requested asset not found", HttpStatus.NOT_FOUND),

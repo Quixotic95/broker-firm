@@ -6,6 +6,9 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface AssetService {
+
+    void increaseSize(Long customerId, String assetName, BigDecimal amount);
+
     Asset getAssetOrThrow(Long customerId, String assetName);
 
     void decreaseUsableSize(Long customerId, String assetName, BigDecimal amount);

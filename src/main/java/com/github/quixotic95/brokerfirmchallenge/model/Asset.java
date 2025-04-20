@@ -47,6 +47,18 @@ public class Asset {
         this.usableSize = usableSize;
     }
 
+    public void increaseSize(BigDecimal amount) {
+        Objects.requireNonNull(amount, "amount must not be null");
+
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidException(ErrorCode.INVALID_ASSET_AMOUNT);
+        }
+
+        this.size = this.size.add(amount);
+        this.usableSize = this.usableSize.add(amount);
+    }
+
+
     public void increaseUsableSize(BigDecimal amount) {
         Objects.requireNonNull(amount, "amount must not be null");
 

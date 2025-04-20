@@ -35,6 +35,14 @@ public class AssetServiceImpl implements AssetService {
         assetRepository.save(asset);
     }
 
+    @Override
+    @Transactional
+    public void increaseSize(Long customerId, String assetName, BigDecimal amount) {
+        Asset asset = getAssetWithLockOrThrow(customerId, assetName);
+        asset.increaseSize(amount);
+        assetRepository.save(asset);
+    }
+
     public Asset getAssetOrThrow(Long customerId, String assetName) {
         AssetId id = AssetId.of(customerId, assetName);
         return assetRepository.findById(id)
@@ -50,6 +58,4 @@ public class AssetServiceImpl implements AssetService {
     public List<Asset> getAllAssetsByCustomerId(Long customerId) {
         return assetRepository.findAllByIdCustomerId(customerId);
     }
-
 }
-

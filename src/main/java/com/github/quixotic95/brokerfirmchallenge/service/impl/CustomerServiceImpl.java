@@ -7,13 +7,26 @@ import com.github.quixotic95.brokerfirmchallenge.model.Customer;
 import com.github.quixotic95.brokerfirmchallenge.repository.CustomerRepository;
 import com.github.quixotic95.brokerfirmchallenge.service.CustomerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public List<Customer> findAll() {
+        List<Customer> customers = customerRepository.findAll();
+        if (customers.isEmpty()) {
+            throw new NotFoundException(ErrorCode.CUSTOMER_NOT_FOUND);
+        }
+        return customers;
+    }
 
     @Override
     public Customer findById(Long id) {
@@ -30,9 +43,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public void validateCredentials(String username, String password) {
         Customer customer = findByUsername(username);
-        if (!customer.getPassword()
-                .equals(password)) { // şimdilik plaintext, sonra hash'e geçilebilir
+        if (!passwordEncoder.matches(password, customer.getPassword())) {
             throw new InvalidException(ErrorCode.LOGIN_FAILED);
         }
     }
+
 }
