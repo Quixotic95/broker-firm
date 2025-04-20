@@ -82,6 +82,38 @@ The app will be available at: `http://localhost:8080`
 
 ---
 
+## ❤ Postman Testing Tips
+
+- Preferred tool for testing.
+- For `POST` requests, choose `Body` > `raw` > format `JSON`.
+- Use the `Authorization` tab and select `Basic Auth`.
+- Enter username and password (e.g., `john_doe` / `password1`).
+
+> Postman handles auth headers and request formatting smoothly.
+
+---
+
+## 🛠️ For Pros: Test with curl
+
+You can also test endpoints with simple curl commands:
+
+```bash
+curl -X POST "http://localhost:8080/api/orders/create" \
+     -H "Content-Type: application/json" \
+     -u john_doe:password1 \
+     -d '{
+           "customerId": 1,
+           "assetName": "AAPL",
+           "side": "BUY",
+           "size": 10,
+           "price": 150.00
+         }'
+```
+
+> Change values as needed and replace credentials with another user for access testing.
+
+---
+
 ## H2 Console
 
 - URL: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
