@@ -39,6 +39,13 @@ All information is stored in an in-memory H2 database:
 ### Prerequisites
 - Java 17+
 - Maven 3.8+
+- Git
+
+### Clone the Repository
+```bash
+git clone https://github.com/Quixotic95/broker-firm.git
+cd broker-firm
+```
 
 ### Run the App
 ```bash
