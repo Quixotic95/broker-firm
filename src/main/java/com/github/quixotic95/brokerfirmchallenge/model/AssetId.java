@@ -18,4 +18,13 @@ public class AssetId implements Serializable {
     private Long customerId;
     @Column(name = "asset_name", nullable = false, length = 50)
     private String assetName;
+
+    public AssetId(Long customerId, String assetName) {
+        this.customerId = customerId;
+        this.assetName = assetName;
+    }
+
+    public static AssetId of(Long customerId, String assetName) {
+        return new AssetId(customerId, assetName);
+    }
 }

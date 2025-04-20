@@ -22,11 +22,11 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "orders")
 @Getter
 @Builder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Table(name = "ORDERS")
 public class Order {
 
     @Id
@@ -49,10 +49,12 @@ public class Order {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;
 
+    @Builder.Default
     @Column(name = "create_date", nullable = false)
     private Instant createDate = Instant.now();
 
@@ -66,4 +68,12 @@ public class Order {
         }
         this.status = OrderStatus.CANCELED;
     }
+
+    public void match() {
+        if (this.status != OrderStatus.PENDING) {
+            throw new InvalidException(ErrorCode.INVALID_ORDER);
+        }
+        this.status = OrderStatus.MATCHED;
+    }
+
 }
