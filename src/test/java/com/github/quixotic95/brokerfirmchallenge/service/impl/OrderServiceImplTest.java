@@ -74,8 +74,8 @@ class OrderServiceImplTest {
 
     @Test
     void matchOrders_shouldFullyMatchOrders() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         orderService.matchOrders(1L, 2L);
 
@@ -96,8 +96,8 @@ class OrderServiceImplTest {
                 .size(30)
                 .build();
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         orderService.matchOrders(1L, 2L);
 
@@ -111,8 +111,8 @@ class OrderServiceImplTest {
         sellOrder = sellOrder.toBuilder()
                 .assetName("GOOG")
                 .build();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
     }
@@ -122,8 +122,8 @@ class OrderServiceImplTest {
         sellOrder = sellOrder.toBuilder()
                 .customerId(1L)
                 .build();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
     }
@@ -133,8 +133,8 @@ class OrderServiceImplTest {
         sellOrder = sellOrder.toBuilder()
                 .price(new BigDecimal("120"))
                 .build();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
     }
@@ -142,8 +142,8 @@ class OrderServiceImplTest {
     @Test
     void matchOrders_shouldThrow_whenOneOrderNotPending() {
         buyOrder.match();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
     }
@@ -162,13 +162,20 @@ class OrderServiceImplTest {
 
     @Test
     void cancelOrder_shouldRestoreAssetsAndUpdateStatus() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
 
         orderService.cancelOrder(1L);
 
         assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
         verify(assetService).increaseUsableSize(1L, "TRY", new BigDecimal("1000"));
         verify(orderRepository).save(buyOrder);
+    }
+
+    @Test
+    void cancelOrder_shouldThrow_whenNotFound() {
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.cancelOrder(1L)).isInstanceOf(NotFoundException.class);
     }
 
     @Test

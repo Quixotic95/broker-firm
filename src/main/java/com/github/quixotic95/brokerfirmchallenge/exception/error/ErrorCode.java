@@ -19,7 +19,8 @@ public enum ErrorCode {
     UNAUTHORIZED_ACCESS("UNAUTHORIZED_ACCESS", "You are not authorized to access this resource", HttpStatus.UNAUTHORIZED),
     LOGIN_FAILED("LOGIN_FAILED", "Invalid username or password", HttpStatus.UNAUTHORIZED),
     CONCURRENT_MODIFICATION("CONCURRENT_MODIFICATION", "Data was modified by another transaction", HttpStatus.CONFLICT),
-    SYSTEM_ERROR("SYSTEM_ERROR", "Unexpected internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
+    SYSTEM_ERROR("SYSTEM_ERROR", "Unexpected internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    CONFLICT_ERROR("CONFLICT_ERROR", "Conflict occurred during concurrent update", HttpStatus.CONFLICT);
 
     private final String code;
     private final String message;

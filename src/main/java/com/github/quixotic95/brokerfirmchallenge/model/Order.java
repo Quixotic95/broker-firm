@@ -4,6 +4,8 @@ import com.github.quixotic95.brokerfirmchallenge.enums.OrderSide;
 import com.github.quixotic95.brokerfirmchallenge.enums.OrderStatus;
 import com.github.quixotic95.brokerfirmchallenge.exception.InvalidException;
 import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +30,7 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "ORDERS")
+@Access(AccessType.FIELD)
 public class Order {
 
     @Id
@@ -57,6 +61,9 @@ public class Order {
     @Builder.Default
     @Column(name = "create_date", nullable = false)
     private Instant createDate = Instant.now();
+
+    @Version
+    private Long version;
 
     public BigDecimal calculateTotalAmount() {
         return price.multiply(BigDecimal.valueOf(size));

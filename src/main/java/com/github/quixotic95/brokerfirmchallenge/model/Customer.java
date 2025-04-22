@@ -1,6 +1,8 @@
 package com.github.quixotic95.brokerfirmchallenge.model;
 
 import com.github.quixotic95.brokerfirmchallenge.enums.CustomerRole;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,6 +26,7 @@ import java.io.Serializable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "CUSTOMERS", indexes = {@Index(name = "idx_customer_username", columnList = "username", unique = true)})
+@Access(AccessType.FIELD)
 public class Customer implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

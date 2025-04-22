@@ -56,7 +56,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void cancelOrder(Long orderId) {
-        Order order = getOrderOrThrow(orderId);
+        Order order = orderRepository.findByIdWithLock(orderId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
         order.cancel();
 
         if (order.getOrderSide() == OrderSide.BUY) {
@@ -71,8 +72,11 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void matchOrders(Long buyOrderId, Long sellOrderId) {
-        Order buyOrder = getOrderOrThrow(buyOrderId);
-        Order sellOrder = getOrderOrThrow(sellOrderId);
+        Order buyOrder = orderRepository.findByIdWithLock(buyOrderId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
+        Order sellOrder = orderRepository.findByIdWithLock(sellOrderId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.ORDER_NOT_FOUND));
+
 
         if (buyOrder.getOrderSide() != OrderSide.BUY || sellOrder.getOrderSide() != OrderSide.SELL) throw new InvalidException(ErrorCode.INVALID_ORDER);
 

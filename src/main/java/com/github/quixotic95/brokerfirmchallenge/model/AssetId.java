@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 @Getter
@@ -20,8 +21,8 @@ public class AssetId implements Serializable {
     private String assetName;
 
     public AssetId(Long customerId, String assetName) {
-        this.customerId = customerId;
-        this.assetName = assetName;
+        this.customerId = Objects.requireNonNull(customerId, "customerId must not be null");
+        this.assetName = Objects.requireNonNull(assetName, "assetName must not be null");
     }
 
     public static AssetId of(Long customerId, String assetName) {

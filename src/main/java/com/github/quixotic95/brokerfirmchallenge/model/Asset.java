@@ -3,6 +3,8 @@ package com.github.quixotic95.brokerfirmchallenge.model;
 import com.github.quixotic95.brokerfirmchallenge.exception.InsufficientException;
 import com.github.quixotic95.brokerfirmchallenge.exception.InvalidException;
 import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -19,6 +21,7 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "ASSETS")
+@Access(AccessType.FIELD)
 public class Asset {
 
     @EmbeddedId
