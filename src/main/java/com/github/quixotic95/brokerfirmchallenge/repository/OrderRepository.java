@@ -15,9 +15,10 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query(
-            "SELECT o FROM Order o WHERE " + "(:customerId IS NULL OR o.customerId = :customerId) AND " + "(:status IS NULL OR o.status = :status) AND " + "(:startDate IS NULL OR o.createDate >= :startDate) AND " + "(:endDate IS NULL OR o.createDate <= :endDate)")
+            "SELECT o FROM Order o WHERE " + "(:customerId IS NULL OR o.customerId = :customerId) AND " + "(:assetName IS NULL OR o.assetName = :assetName) AND " + "(:status IS NULL OR o.status = :status) AND " + "(:startDate IS NULL OR o.createDate >= :startDate) AND " + "(:endDate IS NULL OR o.createDate <= :endDate)")
     List<Order> findAllByFilters(
             @Param("customerId") Long customerId,
+            @Param("assetName") String assetName,
             @Param("status") OrderStatus status, @Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

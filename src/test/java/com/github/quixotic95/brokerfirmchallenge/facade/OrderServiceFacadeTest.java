@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderCreateRequest;
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderFilter;
 import com.github.quixotic95.brokerfirmchallenge.dto.response.OrderDto;
+import com.github.quixotic95.brokerfirmchallenge.enums.CustomerRole;
 import com.github.quixotic95.brokerfirmchallenge.mapper.OrderMapper;
 import com.github.quixotic95.brokerfirmchallenge.model.Customer;
 import com.github.quixotic95.brokerfirmchallenge.model.Order;
@@ -108,12 +109,15 @@ class OrderServiceFacadeTest {
             Customer mockCustomer = Customer.builder()
                     .id(1L)
                     .username("john")
+                    .role(CustomerRole.CUSTOMER)
+                    .password("secret")
                     .build();
+
             when(customerService.findByUsername("john")).thenReturn(mockCustomer);
             when(orderService.listOrders(any())).thenReturn(List.of(order));
             when(orderMapper.toDtoList(List.of(order))).thenReturn(List.of(orderDto));
 
-            OrderFilter filter = new OrderFilter(null, "john", null, null, null);
+            OrderFilter filter = new OrderFilter(null, "john", "AAPL", null, null, null);
             List<OrderDto> result = orderServiceFacade.getOrdersForCurrentUser(filter);
 
             assertThat(result).containsExactly(orderDto);
@@ -128,7 +132,7 @@ class OrderServiceFacadeTest {
             util.when(SecurityUtil::getCustomerId)
                     .thenReturn(1L);
 
-            OrderFilter filter = new OrderFilter(null, null, null, null, null);
+            OrderFilter filter = new OrderFilter(null, null, "AAPL", null, null, null);
 
             when(orderService.listOrders(any())).thenReturn(List.of(order));
             when(orderMapper.toDtoList(List.of(order))).thenReturn(List.of(orderDto));

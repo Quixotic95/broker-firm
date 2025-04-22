@@ -33,7 +33,7 @@ public class OrderServiceFacade {
             orders = orderService.listAll();
         } else {
             Long customerId = SecurityUtil.getCustomerId();
-            orders = orderService.listOrders(new OrderFilter(customerId, null, null, null, null));
+            orders = orderService.listOrders(new OrderFilter(customerId, null, null, null, null, null));
         }
         return orderMapper.toDtoList(orders);
     }
@@ -46,11 +46,11 @@ public class OrderServiceFacade {
                 Customer customer = customerService.findByUsername(filter.username());
                 customerId = customer.getId();
             }
-            OrderFilter resolved = new OrderFilter(customerId, null, filter.status(), filter.startDate(), filter.endDate());
+            OrderFilter resolved = new OrderFilter(customerId, null, filter.assetName(), filter.status(), filter.startDate(), filter.endDate());
             orders = orderService.listOrders(resolved);
         } else {
             Long customerId = SecurityUtil.getCustomerId();
-            OrderFilter securedFilter = new OrderFilter(customerId, null, filter.status(), filter.startDate(), filter.endDate());
+            OrderFilter securedFilter = new OrderFilter(customerId, null, filter.assetName(), filter.status(), filter.startDate(), filter.endDate());
             orders = orderService.listOrders(securedFilter);
         }
         return orderMapper.toDtoList(orders);

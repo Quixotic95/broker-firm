@@ -114,7 +114,6 @@ public class OrderServiceImpl implements OrderService {
         orderRepository.saveAll(List.of(buyOrder, sellOrder));
     }
 
-
     @Override
     public List<Order> listOrders(OrderFilter filter) {
         Long customerId = filter.customerId();
@@ -124,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
                     .getId();
         }
 
-        return orderRepository.findAllByFilters(customerId, filter.status(), filter.startDate(), filter.endDate());
+        return orderRepository.findAllByFilters(customerId, filter.assetName(), filter.status(), filter.startDate(), filter.endDate());
     }
 
     @Override

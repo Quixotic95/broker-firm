@@ -73,6 +73,99 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void listOrders_shouldResolveCustomerId_fromUsername_whenNull() {
+        Customer mockCustomer = Customer.builder()
+                .id(1L)
+                .username("john")
+                .password("hashed")
+                .role(CustomerRole.CUSTOMER)
+                .build();
+
+        when(customerService.findByUsername("john")).thenReturn(mockCustomer);
+        when(orderRepository.findAllByFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
+
+        OrderFilter filter = new OrderFilter(null, "john", "AAPL", null, null, null);
+        List<Order> result = orderService.listOrders(filter);
+
+        assertThat(result).containsExactly(buyOrder);
+    }
+
+    @Test
+    void listOrders_shouldUseCustomerId_whenProvided() {
+        when(orderRepository.findAllByFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
+
+        OrderFilter filter = new OrderFilter(1L, null, "AAPL", null, null, null);
+        List<Order> result = orderService.listOrders(filter);
+
+        assertThat(result).containsExactly(buyOrder);
+    }
+
+    @Test
+    void listOrders_shouldFilterByAssetNameOnly() {
+        OrderFilter filter = new OrderFilter(null, null, "AAPL", null, null, null);
+        when(orderRepository.findAllByFilters(null, "AAPL", null, null, null)).thenReturn(List.of(buyOrder));
+
+        List<Order> result = orderService.listOrders(filter);
+
+        assertThat(result).containsExactly(buyOrder);
+    }
+
+    @Test
+    void createOrder_shouldReturnSavedOrder() {
+        OrderCreateRequest request = new OrderCreateRequest(1L, "AAPL", OrderSide.BUY, 10, new BigDecimal("100"));
+        when(orderRepository.save(any())).thenReturn(buyOrder);
+
+        Order result = orderService.createOrder(request);
+
+        assertThat(result).isNotNull();
+        verify(assetService).decreaseUsableSize(1L, "TRY", new BigDecimal("1000"));
+        verify(orderRepository).save(any(Order.class));
+    }
+
+    @Test
+    void cancelOrder_shouldRestoreAssetsAndUpdateStatus() {
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
+
+        orderService.cancelOrder(1L);
+
+        assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        verify(assetService).increaseUsableSize(1L, "TRY", new BigDecimal("1000"));
+        verify(orderRepository).save(buyOrder);
+    }
+
+    @Test
+    void cancelOrder_shouldThrow_whenNotFound() {
+        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.cancelOrder(1L)).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void getOrderOrThrow_shouldReturnOrder_whenExists() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+
+        Order result = orderService.getOrderOrThrow(1L);
+
+        assertThat(result).isEqualTo(buyOrder);
+    }
+
+    @Test
+    void getOrderOrThrow_shouldThrow_whenNotExists() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.getOrderOrThrow(1L)).isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void listAll_shouldReturnAllOrders() {
+        when(orderRepository.findAll()).thenReturn(List.of(buyOrder));
+
+        List<Order> orders = orderService.listAll();
+
+        assertThat(orders).containsExactly(buyOrder);
+    }
+
+    @Test
     void matchOrders_shouldFullyMatchOrders() {
         when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
         when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
@@ -146,88 +239,5 @@ class OrderServiceImplTest {
         when(orderRepository.findByIdWithLock(2L)).thenReturn(Optional.of(sellOrder));
 
         assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
-    }
-
-    @Test
-    void createOrder_shouldReturnSavedOrder() {
-        OrderCreateRequest request = new OrderCreateRequest(1L, "AAPL", OrderSide.BUY, 10, new BigDecimal("100"));
-        when(orderRepository.save(any())).thenReturn(buyOrder);
-
-        Order result = orderService.createOrder(request);
-
-        assertThat(result).isNotNull();
-        verify(assetService).decreaseUsableSize(1L, "TRY", new BigDecimal("1000"));
-        verify(orderRepository).save(any(Order.class));
-    }
-
-    @Test
-    void cancelOrder_shouldRestoreAssetsAndUpdateStatus() {
-        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.of(buyOrder));
-
-        orderService.cancelOrder(1L);
-
-        assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
-        verify(assetService).increaseUsableSize(1L, "TRY", new BigDecimal("1000"));
-        verify(orderRepository).save(buyOrder);
-    }
-
-    @Test
-    void cancelOrder_shouldThrow_whenNotFound() {
-        when(orderRepository.findByIdWithLock(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> orderService.cancelOrder(1L)).isInstanceOf(NotFoundException.class);
-    }
-
-    @Test
-    void getOrderOrThrow_shouldReturnOrder_whenExists() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
-
-        Order result = orderService.getOrderOrThrow(1L);
-
-        assertThat(result).isEqualTo(buyOrder);
-    }
-
-    @Test
-    void getOrderOrThrow_shouldThrow_whenNotExists() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> orderService.getOrderOrThrow(1L)).isInstanceOf(NotFoundException.class);
-    }
-
-    @Test
-    void listOrders_shouldResolveCustomerId_fromUsername_whenNull() {
-        var mockCustomer = Customer.builder()
-                .id(1L)
-                .username("john")
-                .password("hashed")
-                .role(CustomerRole.CUSTOMER)
-                .build();
-
-        when(customerService.findByUsername("john")).thenReturn(mockCustomer);
-        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(buyOrder));
-
-        var filter = new OrderFilter(null, "john", null, null, null);
-        List<Order> result = orderService.listOrders(filter);
-
-        assertThat(result).containsExactly(buyOrder);
-    }
-
-    @Test
-    void listOrders_shouldUseCustomerId_whenProvided() {
-        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(buyOrder));
-
-        var filter = new OrderFilter(1L, null, null, null, null);
-        List<Order> result = orderService.listOrders(filter);
-
-        assertThat(result).containsExactly(buyOrder);
-    }
-
-    @Test
-    void listAll_shouldReturnAllOrders() {
-        when(orderRepository.findAll()).thenReturn(List.of(buyOrder));
-
-        List<Order> orders = orderService.listAll();
-
-        assertThat(orders).containsExactly(buyOrder);
     }
 }
