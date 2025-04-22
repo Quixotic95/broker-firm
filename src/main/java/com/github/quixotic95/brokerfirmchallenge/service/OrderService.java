@@ -12,7 +12,7 @@ public interface OrderService {
 
     void cancelOrder(Long orderId);
 
-    void matchOrder(Long orderId);
+    void matchOrders(Long buyOrderId, Long sellOrderId);
 
     List<Order> listOrders(OrderFilter filter);
 

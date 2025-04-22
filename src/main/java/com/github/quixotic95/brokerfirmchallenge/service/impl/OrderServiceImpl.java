@@ -70,29 +70,46 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void matchOrder(Long orderId) {
-        Order order = getOrderOrThrow(orderId);
+    public void matchOrders(Long buyOrderId, Long sellOrderId) {
+        Order buyOrder = getOrderOrThrow(buyOrderId);
+        Order sellOrder = getOrderOrThrow(sellOrderId);
 
-        if (order.getStatus() != OrderStatus.PENDING) {
+        if (buyOrder.getOrderSide() != OrderSide.BUY || sellOrder.getOrderSide() != OrderSide.SELL) throw new InvalidException(ErrorCode.INVALID_ORDER);
+
+        if (!buyOrder.getAssetName()
+                .equals(sellOrder.getAssetName())) throw new InvalidException(ErrorCode.INVALID_ORDER);
+
+        if (buyOrder.getPrice()
+                .compareTo(sellOrder.getPrice()) < 0) throw new InvalidException(ErrorCode.INVALID_ORDER);
+
+        if (buyOrder.getCustomerId()
+                .equals(sellOrder.getCustomerId())) throw new InvalidException(ErrorCode.INVALID_ORDER);
+
+        if (buyOrder.getStatus() != OrderStatus.PENDING || sellOrder.getStatus() != OrderStatus.PENDING)
             throw new InvalidException(ErrorCode.ORDER_NOT_MATCHABLE);
-        }
 
-        order.match();
+        int matchedSize = Math.min(buyOrder.getSize(), sellOrder.getSize());
+        BigDecimal price = sellOrder.getPrice();
+        BigDecimal totalAmount = price.multiply(BigDecimal.valueOf(matchedSize));
 
-        Long customerId = order.getCustomerId();
-        String assetName = order.getAssetName();
-        BigDecimal totalAmount = order.calculateTotalAmount();
+        assetService.increaseSize(sellOrder.getCustomerId(), "TRY", totalAmount);
+        assetService.increaseSize(buyOrder.getCustomerId(), buyOrder.getAssetName(), BigDecimal.valueOf(matchedSize));
 
-        if (order.getOrderSide() == OrderSide.BUY) {
-            assetService.decreaseUsableSize(customerId, "TRY", totalAmount);
-            assetService.increaseSize(customerId, assetName, BigDecimal.valueOf(order.getSize()));
+        if (matchedSize == buyOrder.getSize()) {
+            buyOrder.match();
         } else {
-            assetService.decreaseUsableSize(customerId, assetName, BigDecimal.valueOf(order.getSize()));
-            assetService.increaseSize(customerId, "TRY", totalAmount);
+            buyOrder.reduceSize(matchedSize);
         }
 
-        orderRepository.save(order);
+        if (matchedSize == sellOrder.getSize()) {
+            sellOrder.match();
+        } else {
+            sellOrder.reduceSize(matchedSize);
+        }
+
+        orderRepository.saveAll(List.of(buyOrder, sellOrder));
     }
+
 
     @Override
     public List<Order> listOrders(OrderFilter filter) {

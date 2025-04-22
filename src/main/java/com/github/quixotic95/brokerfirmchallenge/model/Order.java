@@ -76,4 +76,11 @@ public class Order {
         this.status = OrderStatus.MATCHED;
     }
 
+    public void reduceSize(int amount) {
+        if (amount <= 0 || amount > this.size) {
+            throw new InvalidException(ErrorCode.INVALID_ORDER);
+        }
+        this.size -= amount;
+    }
+
 }

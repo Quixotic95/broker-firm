@@ -1,6 +1,7 @@
 package com.github.quixotic95.brokerfirmchallenge.controller;
 
 import com.github.quixotic95.brokerfirmchallenge.aspect.AuthorizeEndpoint;
+import com.github.quixotic95.brokerfirmchallenge.dto.request.MatchOrdersRequest;
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderCreateRequest;
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderFilter;
 import com.github.quixotic95.brokerfirmchallenge.dto.response.OrderDto;
@@ -78,16 +79,17 @@ public class OrderController {
         return ResponseEntity.ok(orderMapper.toDtoList(orders));
     }
 
-    @Operation(summary = "Match Order (Admin Only)", description = "Manually match a pending order. Only available to admins.")
-    @ApiResponses(
-            {@ApiResponse(responseCode = "204", description = "Order matched successfully"),
-                    @ApiResponse(responseCode = "403", description = "Access denied")})
-    @PostMapping("/{orderId}/match")
+    @PostMapping("/match")
     @AuthorizeEndpoint(customerAccessible = false)
-    public ResponseEntity<Void> matchOrder(@PathVariable Long orderId) {
-        orderService.matchOrder(orderId);
-        return ResponseEntity.noContent()
-                .build();
+    @Operation(summary = "Match Buy and Sell Orders", description = "Admin manually matches a BUY and SELL order.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Orders matched successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid match request", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Unauthorized")
+    })
+    public ResponseEntity<Void> matchOrders(@Valid @RequestBody MatchOrdersRequest request) {
+        orderService.matchOrders(request.buyOrderId(), request.sellOrderId());
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "List All Orders", description = "Admins can view all orders, customers will only see their own.")

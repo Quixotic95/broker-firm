@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderCreateRequest;
 import com.github.quixotic95.brokerfirmchallenge.dto.request.OrderFilter;
+import com.github.quixotic95.brokerfirmchallenge.enums.CustomerRole;
 import com.github.quixotic95.brokerfirmchallenge.enums.OrderSide;
 import com.github.quixotic95.brokerfirmchallenge.enums.OrderStatus;
 import com.github.quixotic95.brokerfirmchallenge.exception.InvalidException;
@@ -43,11 +44,12 @@ class OrderServiceImplTest {
     @InjectMocks
     private OrderServiceImpl orderService;
 
-    private Order order;
+    private Order buyOrder;
+    private Order sellOrder;
 
     @BeforeEach
     void setUp() {
-        order = Order.builder()
+        buyOrder = Order.builder()
                 .id(1L)
                 .customerId(1L)
                 .assetName("AAPL")
@@ -57,12 +59,99 @@ class OrderServiceImplTest {
                 .status(OrderStatus.PENDING)
                 .createDate(Instant.now())
                 .build();
+
+        sellOrder = Order.builder()
+                .id(2L)
+                .customerId(2L)
+                .assetName("AAPL")
+                .orderSide(OrderSide.SELL)
+                .size(10)
+                .price(new BigDecimal("80"))
+                .status(OrderStatus.PENDING)
+                .createDate(Instant.now())
+                .build();
+    }
+
+    @Test
+    void matchOrders_shouldFullyMatchOrders() {
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        orderService.matchOrders(1L, 2L);
+
+        assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.MATCHED);
+        assertThat(sellOrder.getStatus()).isEqualTo(OrderStatus.MATCHED);
+
+        verify(assetService).increaseSize(2L, "TRY", new BigDecimal("800"));
+        verify(assetService).increaseSize(1L, "AAPL", BigDecimal.valueOf(10));
+        verify(orderRepository).saveAll(List.of(buyOrder, sellOrder));
+    }
+
+    @Test
+    void matchOrders_shouldPartiallyMatchOrders() {
+        buyOrder = buyOrder.toBuilder()
+                .size(50)
+                .build();
+        sellOrder = sellOrder.toBuilder()
+                .size(30)
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        orderService.matchOrders(1L, 2L);
+
+        assertThat(buyOrder.getSize()).isEqualTo(20);
+        assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(sellOrder.getStatus()).isEqualTo(OrderStatus.MATCHED);
+    }
+
+    @Test
+    void matchOrders_shouldThrow_whenAssetNamesMismatch() {
+        sellOrder = sellOrder.toBuilder()
+                .assetName("GOOG")
+                .build();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
+    }
+
+    @Test
+    void matchOrders_shouldThrow_whenSameCustomer() {
+        sellOrder = sellOrder.toBuilder()
+                .customerId(1L)
+                .build();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
+    }
+
+    @Test
+    void matchOrders_shouldThrow_whenPriceMismatch() {
+        sellOrder = sellOrder.toBuilder()
+                .price(new BigDecimal("120"))
+                .build();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
+    }
+
+    @Test
+    void matchOrders_shouldThrow_whenOneOrderNotPending() {
+        buyOrder.match();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
+        when(orderRepository.findById(2L)).thenReturn(Optional.of(sellOrder));
+
+        assertThatThrownBy(() -> orderService.matchOrders(1L, 2L)).isInstanceOf(InvalidException.class);
     }
 
     @Test
     void createOrder_shouldReturnSavedOrder() {
         OrderCreateRequest request = new OrderCreateRequest(1L, "AAPL", OrderSide.BUY, 10, new BigDecimal("100"));
-        when(orderRepository.save(any())).thenReturn(order);
+        when(orderRepository.save(any())).thenReturn(buyOrder);
 
         Order result = orderService.createOrder(request);
 
@@ -73,34 +162,22 @@ class OrderServiceImplTest {
 
     @Test
     void cancelOrder_shouldRestoreAssetsAndUpdateStatus() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
 
         orderService.cancelOrder(1L);
 
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(buyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
         verify(assetService).increaseUsableSize(1L, "TRY", new BigDecimal("1000"));
-        verify(orderRepository).save(order);
-    }
-
-    @Test
-    void matchOrder_shouldMatchAndUpdateAssets() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-        orderService.matchOrder(1L);
-
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.MATCHED);
-        verify(assetService).decreaseUsableSize(1L, "TRY", new BigDecimal("1000"));
-        verify(assetService).increaseSize(1L, "AAPL", BigDecimal.valueOf(10));
-        verify(orderRepository).save(order);
+        verify(orderRepository).save(buyOrder);
     }
 
     @Test
     void getOrderOrThrow_shouldReturnOrder_whenExists() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(buyOrder));
 
         Order result = orderService.getOrderOrThrow(1L);
 
-        assertThat(result).isEqualTo(order);
+        assertThat(result).isEqualTo(buyOrder);
     }
 
     @Test
@@ -111,56 +188,39 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void cancelOrder_shouldThrow_whenOrderNotPending() {
-        order.match();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-        assertThatThrownBy(() -> orderService.cancelOrder(1L)).isInstanceOf(InvalidException.class);
-    }
-
-    @Test
-    void matchOrder_shouldThrow_whenOrderNotPending() {
-        order.match();
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-
-        assertThatThrownBy(() -> orderService.matchOrder(1L)).isInstanceOf(InvalidException.class);
-    }
-
-    @Test
-    void listAll_shouldReturnAllOrders() {
-        when(orderRepository.findAll()).thenReturn(List.of(order));
-
-        List<Order> orders = orderService.listAll();
-
-        assertThat(orders).containsExactly(order);
-    }
-
-    @Test
     void listOrders_shouldResolveCustomerId_fromUsername_whenNull() {
         var mockCustomer = Customer.builder()
                 .id(1L)
                 .username("john")
                 .password("hashed")
-                .role(com.github.quixotic95.brokerfirmchallenge.enums.CustomerRole.CUSTOMER)
+                .role(CustomerRole.CUSTOMER)
                 .build();
 
         when(customerService.findByUsername("john")).thenReturn(mockCustomer);
-
-        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(order));
+        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(buyOrder));
 
         var filter = new OrderFilter(null, "john", null, null, null);
         List<Order> result = orderService.listOrders(filter);
 
-        assertThat(result).containsExactly(order);
+        assertThat(result).containsExactly(buyOrder);
     }
 
     @Test
     void listOrders_shouldUseCustomerId_whenProvided() {
-        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(order));
+        when(orderRepository.findAllByFilters(eq(1L), any(), any(), any())).thenReturn(List.of(buyOrder));
 
         var filter = new OrderFilter(1L, null, null, null, null);
         List<Order> result = orderService.listOrders(filter);
 
-        assertThat(result).containsExactly(order);
+        assertThat(result).containsExactly(buyOrder);
+    }
+
+    @Test
+    void listAll_shouldReturnAllOrders() {
+        when(orderRepository.findAll()).thenReturn(List.of(buyOrder));
+
+        List<Order> orders = orderService.listAll();
+
+        assertThat(orders).containsExactly(buyOrder);
     }
 }
