@@ -123,7 +123,7 @@ public class OrderServiceImpl implements OrderService {
                     .getId();
         }
 
-        return orderRepository.findAllByFilters(customerId, filter.assetName(), filter.status(), filter.startDate(), filter.endDate());
+        return orderRepository.findAllByDynamicFilters(customerId, filter.assetName(), filter.status(), filter.startDate(), filter.endDate());
     }
 
     @Override

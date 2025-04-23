@@ -82,7 +82,7 @@ class OrderServiceImplTest {
                 .build();
 
         when(customerService.findByUsername("john")).thenReturn(mockCustomer);
-        when(orderRepository.findAllByFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
+        when(orderRepository.findAllByDynamicFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
 
         OrderFilter filter = new OrderFilter(null, "john", "AAPL", null, null, null);
         List<Order> result = orderService.listOrders(filter);
@@ -92,7 +92,7 @@ class OrderServiceImplTest {
 
     @Test
     void listOrders_shouldUseCustomerId_whenProvided() {
-        when(orderRepository.findAllByFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
+        when(orderRepository.findAllByDynamicFilters(eq(1L), eq("AAPL"), any(), any(), any())).thenReturn(List.of(buyOrder));
 
         OrderFilter filter = new OrderFilter(1L, null, "AAPL", null, null, null);
         List<Order> result = orderService.listOrders(filter);
@@ -103,7 +103,7 @@ class OrderServiceImplTest {
     @Test
     void listOrders_shouldFilterByAssetNameOnly() {
         OrderFilter filter = new OrderFilter(null, null, "AAPL", null, null, null);
-        when(orderRepository.findAllByFilters(null, "AAPL", null, null, null)).thenReturn(List.of(buyOrder));
+        when(orderRepository.findAllByDynamicFilters(null, "AAPL", null, null, null)).thenReturn(List.of(buyOrder));
 
         List<Order> result = orderService.listOrders(filter);
 

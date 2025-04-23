@@ -20,7 +20,9 @@ public enum ErrorCode {
     LOGIN_FAILED("LOGIN_FAILED", "Invalid username or password", HttpStatus.UNAUTHORIZED),
     CONCURRENT_MODIFICATION("CONCURRENT_MODIFICATION", "Data was modified by another transaction", HttpStatus.CONFLICT),
     SYSTEM_ERROR("SYSTEM_ERROR", "Unexpected internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
-    CONFLICT_ERROR("CONFLICT_ERROR", "Conflict occurred during concurrent update", HttpStatus.CONFLICT);
+    CONFLICT_ERROR("CONFLICT_ERROR", "Conflict occurred during concurrent update", HttpStatus.CONFLICT),
+    CUSTOMER_ID_REQUIRED("CUSTOMER_ID_REQUIRED", "Customer ID is required for this operation", HttpStatus.BAD_REQUEST),
+    INVALID_CUSTOMER_FILTER("INVALID_CUSTOMER_FILTER", "Customer ID and username do not match", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;
