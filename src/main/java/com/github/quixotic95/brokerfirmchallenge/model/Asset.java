@@ -9,7 +9,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,9 +31,6 @@ public class Asset {
 
     @Column(name = "usable_size", nullable = false, precision = 19, scale = 4)
     private BigDecimal usableSize;
-
-    @Version
-    private Long version;
 
     public Asset(AssetId id, BigDecimal size, BigDecimal usableSize) {
         Objects.requireNonNull(id, "AssetId must not be null");

@@ -2,12 +2,12 @@ package com.github.quixotic95.brokerfirmchallenge.exception;
 
 import com.github.quixotic95.brokerfirmchallenge.exception.error.ApiError;
 import com.github.quixotic95.brokerfirmchallenge.exception.error.ErrorCode;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PessimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -27,18 +27,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ApiError> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex, HttpServletRequest request) {
-        ApiError error = ApiError.of(ErrorCode.CONFLICT_ERROR, request.getRequestURI());
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(
-            {OptimisticLockException.class,
-                    PessimisticLockException.class})
+    @ExceptionHandler(PessimisticLockException.class)
     public ResponseEntity<ApiError> handleLockingExceptions(Exception ex, HttpServletRequest request) {
         ApiError error = ApiError.of(ErrorCode.CONFLICT_ERROR, request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        FieldError fieldError = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
+        ErrorCode errorCode = switch (fieldError != null ? fieldError.getField() : "") {
+            case "customerId" -> ErrorCode.CUSTOMER_ID_REQUIRED;
+            default -> ErrorCode.INVALID_ORDER;
+        };
+
+        ApiError error = ApiError.of(errorCode, request.getRequestURI());
+        return ResponseEntity.status(errorCode.getHttpStatus())
                 .body(error);
     }
 

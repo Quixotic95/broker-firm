@@ -14,7 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,9 +60,6 @@ public class Order {
     @Builder.Default
     @Column(name = "create_date", nullable = false)
     private Instant createDate = Instant.now();
-
-    @Version
-    private Long version;
 
     public BigDecimal calculateTotalAmount() {
         return price.multiply(BigDecimal.valueOf(size));

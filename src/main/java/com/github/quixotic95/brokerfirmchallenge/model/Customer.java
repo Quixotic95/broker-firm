@@ -41,7 +41,5 @@ public class Customer implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerRole role;
-
-
 }
 
